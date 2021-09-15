@@ -1,0 +1,582 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     22931,        574]
+NotebookOptionsPosition[     21221,        539]
+NotebookOutlinePosition[     21616,        555]
+CellTagsIndexPosition[     21573,        552]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[Association[
+    "boxes" -> FormBox["\[Lambda]", TraditionalForm], "errors" -> {}, "input" -> 
+     "\\lambda", "state" -> "Boxes"],
+    "TeXAssistantTemplate"], TraditionalForm]],ExpressionUUID->
+  "f787ffd0-40bb-49b3-8e96-70af55a18a91"],
+ "-Core Distance Partitions"
+}], "Title",
+ CellChangeTimes->{{3.8399891858315983`*^9, 
+  3.839989247212224*^9}},ExpressionUUID->"a426bcc4-8af0-49c7-a0ea-\
+aa3fdfbe911e"],
+
+Cell[TextData[{
+ StyleBox["Please cite as:",
+  FontWeight->"Bold",
+  FontSlant->"Italic"],
+ " \tMifsud X., \[OpenCurlyDoubleQuote]",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[Association[
+    "boxes" -> FormBox["\[Lambda]", TraditionalForm], "errors" -> {}, "input" -> 
+     "\\lambda", "state" -> "Boxes"],
+    "TeXAssistantTemplate"], TraditionalForm]],ExpressionUUID->
+  "f1412bc7-2c65-47c3-9288-3e04632bfca8"],
+ "--Core distance partitions\[CloseCurlyDoubleQuote], ",
+ StyleBox["Linear Algebra Appl. ",
+  FontSlant->"Italic"],
+ "(2021), https://doi.org/10.1016/j.laa.2020.12.012"
+}], "Text",
+ CellChangeTimes->{{3.840705116619174*^9, 3.840705136279278*^9}, {
+  3.840705204447998*^9, 
+  3.840705269713664*^9}},ExpressionUUID->"df4fc467-1e36-4d6e-8e88-\
+b3f0e2abb7f8"],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Finding ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[Association[
+    "boxes" -> FormBox["\[Lambda]", TraditionalForm], "errors" -> {}, "input" -> 
+     "\\lambda", "state" -> "Boxes"],
+    "TeXAssistantTemplate"], TraditionalForm]],ExpressionUUID->
+  "dc842711-28bc-48f5-9a56-d1bf43a11e5f"],
+ "-CDPs for instances in the GraphData database"
+}], "Section",
+ CellChangeTimes->{{3.8399893496403*^9, 
+  3.839989423664565*^9}},ExpressionUUID->"cc7cea2e-c649-4a90-b84b-\
+9e05c41c4d80"],
+
+Cell[TextData[{
+ "We shall be using the GraphData database predominantly since it has many of \
+the information we require cached, therefore allowing for slightly faster \
+searches for valid examples and/or counter--examples, identifying properties, \
+etc...\n",
+ StyleBox["Note that the methods defined here only result in numerically \
+stable computations for small values of ",
+  FontWeight->"Bold"],
+ StyleBox["n",
+  FontWeight->"Bold",
+  FontSlant->"Italic"],
+ StyleBox[", where ",
+  FontWeight->"Bold"],
+ StyleBox["n",
+  FontWeight->"Bold",
+  FontSlant->"Italic"],
+ StyleBox[" is the number of vertices. ",
+  FontWeight->"Bold"],
+ "Suitable for generating examples and testing for correctness the C++ \
+implementation."
+}], "Text",
+ CellChangeTimes->{{3.839990228481676*^9, 3.8399903002577257`*^9}, {
+  3.840703748142844*^9, 
+  3.840703829272565*^9}},ExpressionUUID->"cb0f73c8-ce94-4d88-bf5e-\
+3617b260b3cb"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"Utility", " ", "Functions"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"coreCheck", "[", "arr_", "]"}], ":=", 
+     RowBox[{"AllTrue", "[", 
+      RowBox[{
+       RowBox[{"Total", "[", 
+        RowBox[{
+         RowBox[{"Boole", "[", 
+          RowBox[{"Thread", "/@", 
+           RowBox[{"Thread", "[", 
+            RowBox[{"arr", "!=", "0"}], "]"}]}], "]"}], ",", 
+         RowBox[{"{", "2", "}"}]}], "]"}], ",", 
+       RowBox[{
+        RowBox[{"#", ">", "0"}], "&"}]}], "]"}]}], ";"}], 
+   "                                                         ", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{"Given", " ", "an", " ", "eigenspace", " ", "basis"}], ",", " ", 
+     
+     RowBox[{
+     "returns", " ", "a", " ", "boolean", " ", "mask", " ", "identifying", 
+      " ", "which", " ", "entries", " ", "are", " ", "core"}]}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"graphOrbits", "[", "g_", "]"}], ":=", 
+     RowBox[{"GroupOrbits", "[", 
+      RowBox[{
+       RowBox[{"GraphData", "[", 
+        RowBox[{"g", ",", "\"\<AutomorphismGroup\>\""}], "]"}], ",", 
+       RowBox[{"GraphData", "[", 
+        RowBox[{"g", ",", "\"\<Vertices\>\""}], "]"}]}], "]"}]}], ";"}], 
+   "                           ", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Finds", " ", "the", " ", "orbits", " ", "of", " ", "the", " ", 
+     "automorphism", " ", "groups", " ", "of", " ", "G", " ", "acting", " ", 
+     "on", " ", "V", 
+     RowBox[{"(", "G", ")"}]}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"EigenSpace", "[", 
+      RowBox[{"M_", ",", "l_"}], "]"}], ":=", 
+     RowBox[{"Chop", "[", 
+      RowBox[{"NullSpace", "[", 
+       RowBox[{"SetPrecision", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"l", "*", 
+           RowBox[{"IdentityMatrix", "[", 
+            RowBox[{"Length", "[", "M", "]"}], "]"}]}], "-", "M"}], ",", 
+         "MachinePrecision"}], "]"}], "]"}], "]"}]}], ";"}], "              ", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Efficiently", " ", "computes", " ", "a", " ", "spanning", " ", "basis", 
+     " ", "for", " ", "the", " ", "eigenvalue", " ", "l", " ", "associated", 
+     " ", "with", " ", "the", " ", "matrix", " ", "M"}], "*)"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.839988890165893*^9, 3.839988927256831*^9}, {
+  3.839989059009563*^9, 3.8399890629894733`*^9}, {3.839989122365449*^9, 
+  3.839989122725629*^9}, {3.8399891817179203`*^9, 3.839989183220901*^9}, {
+  3.839989446003151*^9, 3.839989592338738*^9}, {3.8399896277441273`*^9, 
+  3.839989720474123*^9}, {3.839989908198662*^9, 3.8399899316868877`*^9}, {
+  3.839989999143696*^9, 3.839990023513661*^9}, {3.8399904774193983`*^9, 
+  3.839990478428067*^9}, {3.8399990805996*^9, 3.8399990870624866`*^9}, {
+  3.84032571770194*^9, 3.840325722825025*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"2cb8d83c-6475-457e-b5b4-ab6005167886"],
+
+Cell[TextData[{
+ StyleBox["Theorem:",
+  FontWeight->"Bold"],
+ " The set of core vertices is the disjoint union of orbits."
+}], "Text",
+ CellChangeTimes->{{3.839990389755458*^9, 
+  3.839990414975872*^9}},ExpressionUUID->"b967f0b0-f8cd-4651-8b32-\
+cc5b8cf46d63"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "The", " ", "following", " ", "function", " ", "computes", " ", "which", 
+    " ", "orbits", " ", "construct", " ", "the", " ", "set", " ", "of", " ", 
+    "core", " ", "vertices", " ", "under", " ", "disjoint", " ", "union"}], 
+   "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{"Parameters", ":", "\[IndentingNewLine]", "      ", "g", ":", " ", 
+     RowBox[{
+     "The", " ", "unique", " ", "identifier", " ", "of", " ", "a", " ", 
+      "graph", " ", "instance", " ", "in", " ", "GraphData", 
+      "\[IndentingNewLine]", "     ", 
+      RowBox[{"l", ":", " ", 
+       RowBox[{
+       "The", " ", "eigenvalue", " ", "for", " ", "which", " ", "we", " ", 
+        "are", " ", "checking", " ", "which", " ", "orbits", " ", "are", " ", 
+        "core", "\[IndentingNewLine]", "orbs"}], ":", " ", 
+       RowBox[{
+       "The", " ", "collection", " ", "of", " ", "orbits", " ", "of", " ", 
+        "the", " ", "automorphism", " ", "group", " ", "acting", " ", "on", 
+        " ", "the", " ", "vertex", " ", "set", "\[IndentingNewLine]", 
+        RowBox[{"type", ":", " ", 
+         RowBox[{
+         "The", " ", "GraphData", " ", "identifier", " ", "for", " ", "the", 
+          " ", "matrix", " ", "of", " ", "which", " ", "l", " ", "is", " ", 
+          "an", " ", "eigenvalue"}]}]}]}]}]}], ",", " ", 
+    RowBox[{"eg", ".", " ", "\"\<AdjacencyMatrix\>\""}], ",", " ", 
+    "\"\<LaplacianMatrix\>\"", ",", " ", 
+    RowBox[{"or", " ", "\"\<NormalizedLaplacianMatrix\>\""}]}], 
+   "\[IndentingNewLine]", " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"orbitsCV", "[", 
+      RowBox[{"g_", ",", " ", "l_", ",", "orbs_", ",", " ", "type_"}], "]"}], 
+     ":=", " ", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"cvOrbits", ",", "kernel"}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"kernel", " ", "=", " ", 
+         RowBox[{"Transpose", "[", 
+          RowBox[{"EigenSpace", "[", 
+           RowBox[{
+            RowBox[{"GraphData", "[", 
+             RowBox[{"g", ",", "type"}], "]"}], ",", "l"}], "]"}], "]"}]}], 
+        ";", " ", 
+        RowBox[{"(*", 
+         RowBox[{
+         "Compute", " ", "the", " ", "eigenspace", " ", "basis", " ", "and", 
+          " ", "reshape", " ", "by", " ", "transposing"}], "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"cvOrbits", " ", "=", " ", 
+         RowBox[{"Cases", "[", 
+          RowBox[{"orbs", ",", " ", 
+           RowBox[{"x_", "/;", " ", 
+            RowBox[{"coreCheck", "[", 
+             RowBox[{"kernel", "[", 
+              RowBox[{"[", "x", "]"}], "]"}], "]"}]}]}], "]"}]}], ";", 
+        "        ", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{"Find", " ", "which", " ", "orbits"}], ",", " ", 
+          RowBox[{"based", " ", "on", " ", "the", " ", "eigenspace"}], ",", 
+          " ", 
+          RowBox[{"are", " ", "core"}]}], "*)"}], "\[IndentingNewLine]", 
+        RowBox[{"Return", "[", "cvOrbits", "]"}]}]}], "\[IndentingNewLine]", 
+      "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"CDPIndex", "[", "cdp_", "]"}], ":=", " ", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", "n", "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"n", " ", "=", " ", 
+         RowBox[{"Length", "[", 
+          RowBox[{"Flatten", "[", "cdp", "]"}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Return", "[", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"-", "1"}], "/", "n"}], ")"}], "*", 
+          RowBox[{"Sum", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Length", "[", "p", "]"}], "*", 
+             RowBox[{"Log", "[", 
+              RowBox[{
+               RowBox[{"Length", "[", "p", "]"}], "/", "n"}], "]"}]}], ",", 
+            " ", 
+            RowBox[{"{", 
+             RowBox[{"p", ",", " ", "cdp"}], "}"}]}], "]"}]}], "]"}]}]}], 
+      "\[IndentingNewLine]", "]"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "The", " ", "following", " ", "function", " ", "computes", " ", "the", 
+     " ", 
+     FormBox[
+      RowBox[{
+       TemplateBox[Association[
+        "boxes" -> FormBox["\[Lambda]", TraditionalForm], "errors" -> {}, 
+         "input" -> "\\lambda", "state" -> "Boxes"],
+        "TeXAssistantTemplate"], "-", "CDP"}],
+      TraditionalForm], " ", "for", " ", "a", " ", "given", " ", 
+     "eigenvalue"}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+     RowBox[{
+     "Parameters", ":", "\[IndentingNewLine]", "      ", "g", ":", " ", 
+      RowBox[{
+      "The", " ", "unique", " ", "identifier", " ", "of", " ", "a", " ", 
+       "graph", " ", "instance", " ", "in", " ", "GraphData", 
+       "\[IndentingNewLine]", "     ", 
+       RowBox[{"l", ":", " ", 
+        RowBox[{
+        "The", " ", "eigenvalue", " ", "for", " ", "which", " ", "we", " ", 
+         "are", " ", "checking", " ", "which", " ", "orbits", " ", "are", " ",
+          "core", "\[IndentingNewLine]", "type"}], ":", " ", 
+        RowBox[{
+        "The", " ", "GraphData", " ", "identifier", " ", "for", " ", "the", 
+         " ", "matrix", " ", "of", " ", "which", " ", "l", " ", "is", " ", 
+         "an", " ", "eigenvalue"}]}]}]}], ",", " ", 
+     RowBox[{"eg", ".", " ", "\"\<AdjacencyMatrix\>\""}], ",", " ", 
+     "\"\<LaplacianMatrix\>\"", ",", " ", 
+     RowBox[{"or", " ", "\"\<NormalizedLaplacianMatrix\>\""}]}], 
+    "\[IndentingNewLine]", " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"coreDistancePartition", "[", 
+      RowBox[{"g_", ",", "l_", ",", " ", "type_"}], "]"}], ":=", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+        "orbits", ",", " ", "cvOrbits", ",", "v1", ",", " ", "partition"}], 
+        "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"orbits", " ", "=", " ", 
+         RowBox[{"graphOrbits", "[", "g", "]"}]}], ";", 
+        "                                     ", 
+        RowBox[{"(*", 
+         RowBox[{"Compute", " ", "the", " ", "orbits"}], "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"cvOrbits", " ", "=", " ", 
+         RowBox[{"orbitsCV", "[", 
+          RowBox[{"g", ",", " ", "l", ",", "orbits", ",", " ", "type"}], 
+          "]"}]}], ";", " ", 
+        RowBox[{"(*", 
+         RowBox[{
+         "...", "and", " ", "find", " ", "which", " ", "of", " ", "them", " ",
+           "are", " ", "core"}], "*)"}], "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+          "The", " ", "iteratively", " ", "construct", " ", "the", " ", 
+           FormBox[
+            RowBox[{
+             
+             TemplateBox[Association[
+              "boxes" -> FormBox["\[Lambda]", TraditionalForm], 
+               "errors" -> {}, "input" -> "\\lambda", "state" -> "Boxes"],
+              "TeXAssistantTemplate"], "-", "CDP"}],
+            TraditionalForm]}], ",", " ", 
+          RowBox[{
+          "by", " ", "growing", " ", "the", " ", "neighbourhood", " ", "by", 
+           " ", "a", " ", "distance", " ", "of", " ", "one"}], ",", " ", 
+          RowBox[{
+          "until", " ", "all", " ", "vertices", " ", "in", " ", "the", " ", 
+           "graph", " ", "have", " ", "been", " ", "visited"}]}], "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"v1", "=", 
+         RowBox[{"Flatten", "[", "cvOrbits", "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"partition", " ", "=", " ", 
+         RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"While", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Length", "[", "v1", "]"}], "\[NotEqual]", "0"}], ",", 
+          "\[IndentingNewLine]", "\t", 
+          RowBox[{
+           RowBox[{"AppendTo", "[", 
+            RowBox[{"partition", ",", " ", "v1"}], "]"}], ";", 
+           "\[IndentingNewLine]", "\t", 
+           RowBox[{"v1", " ", "=", " ", 
+            RowBox[{"Complement", "[", 
+             RowBox[{
+              RowBox[{"VertexList", "[", 
+               RowBox[{"NeighborhoodGraph", "[", 
+                RowBox[{
+                 RowBox[{"GraphData", "[", "g", "]"}], ",", "v1"}], "]"}], 
+               "]"}], ",", 
+              RowBox[{"Flatten", "[", "partition", "]"}]}], "]"}]}]}]}], 
+         "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+        RowBox[{"Return", "[", 
+         RowBox[{"{", 
+          RowBox[{"l", ",", " ", 
+           RowBox[{"Length", "[", "partition", "]"}], ",", " ", 
+           RowBox[{"N", "[", 
+            RowBox[{
+             RowBox[{"CDPIndex", "[", "partition", "]"}], ",", " ", "3"}], 
+            "]"}]}], "}"}], "]"}]}]}], "\[IndentingNewLine]", "]"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"coreDistancePartitions", "[", 
+      RowBox[{"g_", ",", "type_", ",", "specType_"}], "]"}], ":=", 
+     RowBox[{"Transpose", "[", 
+      RowBox[{"SortBy", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"coreDistancePartition", "[", 
+           RowBox[{"g", ",", "l", ",", " ", "type"}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"l", ",", 
+            RowBox[{"DeleteDuplicates", "[", 
+             RowBox[{"GraphData", "[", 
+              RowBox[{"g", ",", " ", "specType"}], "]"}], "]"}]}], "}"}]}], 
+         "]"}], ",", " ", "Last"}], "]"}], "]"}]}], ";"}]}]}]], "Input",
+ CellChangeTimes->CompressedData["
+1:eJwdz00ogwEAh/E3e60sZsNo2ZLaYUUzTDPjgJYiK1PGlog4OMzU2MV3M0k7
+mJVWzJIycmAHUywfyddlW5p20JQWqykfLZlN7L/D0+/8FPcNKwbSCIIoTAb/
+5LLlitXX+i9xeAUq5b0OeLH9mPJ8v2UPqqqVKUWxAxdcZ76k9LJPA/DjnhaB
+IY/+DZKl2XGoVRtzKpMmfkZZkG8NcWHg182DzlpnOdR3sqvgjtLTDik9ZBcc
+e8jthxF/YgqWRaJz0BKMGWFU/WmCwtZGF2SQ31cwzNi8hpcGkxceS6g+GG8m
+M0VJnwuGmDBPWiKAPIdOCNPPapagji42wxFmkxXOLh6lpHc/rUGBZsIGOcG6
+DWjPmt6Cqo4TahV+Dwk69I6L8qHspqEITkpZfGjguySQMq9pg4MzNAW02LV3
+0Jxx64e7PhtHnNT9vsCF//G51gY=
+  "],
+ CellLabel->"In[4]:=",ExpressionUUID->"0e0193a2-81f8-4e14-a0ba-2879727bd353"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"search", "[", 
+   RowBox[{"min_", ",", " ", "max_"}], "]"}], ":=", 
+  RowBox[{"Table", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"GraphData", "[", "g", "]"}], ",", " ", "g", ",", " ", 
+      RowBox[{"coreDistancePartitions", "[", 
+       RowBox[{
+       "g", ",", "\"\<LaplacianMatrix\>\"", ",", 
+        "\"\<LaplacianSpectrum\>\""}], "]"}]}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"g", ",", " ", 
+      RowBox[{"GraphData", "[", 
+       RowBox[{"\"\<Connected\>\"", ",", " ", 
+        RowBox[{"min", ";;", "max"}]}], "]"}]}], "}"}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.8399917686563272`*^9, 3.839991787893187*^9}, {
+  3.839991821503663*^9, 3.8399918418574057`*^9}, {3.839991876600122*^9, 
+  3.839991881264517*^9}, {3.8399919165409937`*^9, 3.8399919173171*^9}, {
+  3.839991962793078*^9, 3.839991975758636*^9}, {3.839998374036326*^9, 
+  3.839998420387083*^9}, {3.839998483692335*^9, 3.839998496762369*^9}, {
+  3.8403256386501913`*^9, 3.840325641639214*^9}, {3.8403267115381536`*^9, 
+  3.840326716360804*^9}},
+ CellLabel->"In[8]:=",ExpressionUUID->"7a9c62d0-02ba-4fac-92fc-4950f9eeb26d"],
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{
+    "Example", " ", "export", " ", "of", " ", "an", " ", "adjancency", " ", 
+     "matrix", " ", "of", " ", "a", " ", "Graph", " ", "instance", " ", "to", 
+     " ", "a", " ", "CSV", " ", "file"}], "..."}], " ", "*)"}], 
+  " "}]], "Input",
+ CellChangeTimes->{{3.840703711322659*^9, 3.840703736743545*^9}},
+ CellLabel->"In[9]:=",ExpressionUUID->"05e9f231-93cf-4910-b625-631699baeb82"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Export", "[", 
+  RowBox[{"\"\<./Desktop/c1001.csv\>\"", ",", " ", 
+   RowBox[{"AdjacencyMatrix", "[", 
+    RowBox[{"CycleGraph", "[", "1001", "]"}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.8403270793972387`*^9, 3.840327155794176*^9}, {
+  3.840352181728444*^9, 3.840352195259193*^9}, {3.840352334976019*^9, 
+  3.8403523387215147`*^9}},
+ CellLabel->"In[10]:=",ExpressionUUID->"8cd6c06d-dcb5-48d9-bda5-5b69a5b90363"],
+
+Cell[BoxData["\<\"./Desktop/c1001.csv\"\>"], "Output",
+ CellChangeTimes->{3.840327156643591*^9, 3.8403521991827517`*^9, 
+  3.840352344009819*^9, 3.840703846850449*^9},
+ CellLabel->"Out[10]=",ExpressionUUID->"eed43aa0-eee5-4c82-8123-502dfad728e0"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{
+   RowBox[{
+   "Example", " ", "generation", " ", "of", " ", "a", " ", "random", " ", 
+    "graph", " ", "for", " ", "a", " ", "given", " ", "number", " ", "of", 
+    " ", "vertices", " ", 
+    StyleBox["n",
+     FontSlant->"Italic"]}], "..."}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.840703945577304*^9, 3.8407039650871267`*^9}, {
+  3.840704286718937*^9, 
+  3.840704286790842*^9}},ExpressionUUID->"319542c7-fc6d-4e76-ba06-\
+63a292b9e22e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"randomEdgeCount", "[", "n_", "]"}], ":=", 
+   RowBox[{"RandomVariate", "[", 
+    RowBox[{"DiscreteUniformDistribution", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       FractionBox[
+        RowBox[{
+         SuperscriptBox["n", "2"], "-", "n"}], "4"], ",", " ", 
+       FractionBox[
+        RowBox[{
+         SuperscriptBox["n", "2"], "-", "n"}], "2"]}], "}"}], "]"}], "]"}]}], 
+  ";", " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Uniformly", " ", "choose", " ", "the", " ", "number", " ", "of", " ", 
+    "edges", " ", "such", " ", "that", " ", "the", " ", "resulting", " ", 
+    "adjacency", " ", "matrix", " ", "is", " ", "dense"}], " ", "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"n", " ", "=", " ", "10000"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Export", "[", 
+  RowBox[{"\"\<./Desktop/random10000.csv\>\"", ",", " ", 
+   RowBox[{"AdjacencyMatrix", "[", 
+    RowBox[{"RandomGraph", "[", 
+     RowBox[{"{", 
+      RowBox[{"n", ",", " ", 
+       RowBox[{"randomEdgeCount", "[", "n", "]"}]}], "}"}], "]"}], "]"}]}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.840703971808185*^9, 3.8407040351251163`*^9}, {
+  3.8407041037701406`*^9, 3.840704303317309*^9}, {3.840704391400839*^9, 
+  3.840704396712429*^9}},
+ CellLabel->"In[17]:=",ExpressionUUID->"16ad4c58-5a89-4ff6-8093-324f493eea8b"],
+
+Cell[BoxData["\<\"./Desktop/random10000.csv\"\>"], "Output",
+ CellChangeTimes->{3.840704849140562*^9},
+ CellLabel->"Out[18]=",ExpressionUUID->"e567629c-08aa-47d1-9778-7c659baa0bde"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{Full, Full},
+WindowMargins->{{436, Automatic}, {Automatic, 50}},
+FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (July 9, 2021)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"3030415a-edce-41a4-84f3-79117e9c3437"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 466, 12, 100, "Title",ExpressionUUID->"a426bcc4-8af0-49c7-a0ea-aa3fdfbe911e"],
+Cell[1049, 36, 769, 20, 37, "Text",ExpressionUUID->"df4fc467-1e36-4d6e-8e88-b3f0e2abb7f8"],
+Cell[CellGroupData[{
+Cell[1843, 60, 497, 13, 69, "Section",ExpressionUUID->"cc7cea2e-c649-4a90-b84b-9e05c41c4d80"],
+Cell[2343, 75, 914, 24, 58, "Text",ExpressionUUID->"cb0f73c8-ce94-4d88-bf5e-3617b260b3cb"],
+Cell[3260, 101, 2983, 71, 136, "Input",ExpressionUUID->"2cb8d83c-6475-457e-b5b4-ab6005167886"],
+Cell[6246, 174, 260, 7, 35, "Text",ExpressionUUID->"b967f0b0-f8cd-4651-8b32-cc5b8cf46d63"],
+Cell[6509, 183, 10257, 239, 833, "Input",ExpressionUUID->"0e0193a2-81f8-4e14-a0ba-2879727bd353"],
+Cell[16769, 424, 1161, 25, 30, "Input",ExpressionUUID->"7a9c62d0-02ba-4fac-92fc-4950f9eeb26d"],
+Cell[17933, 451, 477, 10, 52, "Input",ExpressionUUID->"05e9f231-93cf-4910-b625-631699baeb82"],
+Cell[CellGroupData[{
+Cell[18435, 465, 445, 8, 30, "Input",ExpressionUUID->"8cd6c06d-dcb5-48d9-bda5-5b69a5b90363"],
+Cell[18883, 475, 246, 3, 34, "Output",ExpressionUUID->"eed43aa0-eee5-4c82-8123-502dfad728e0"]
+}, Open  ]],
+Cell[19144, 481, 491, 12, 30, "Input",ExpressionUUID->"319542c7-fc6d-4e76-ba06-63a292b9e22e"],
+Cell[CellGroupData[{
+Cell[19660, 497, 1337, 33, 94, "Input",ExpressionUUID->"16ad4c58-5a89-4ff6-8093-324f493eea8b"],
+Cell[21000, 532, 181, 2, 34, "Output",ExpressionUUID->"e567629c-08aa-47d1-9778-7c659baa0bde"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

@@ -1,0 +1,7 @@
+----- INFO ON DATASETS IN ./Data/ -----
+
+c1001.csv = Cycle on 1,001 vertices; algorithm known to yield correct LCDPs
+c10001.csv = Cycle on 10,001 vertices; algorithm known to yield correct LCDPs
+random10000.csv = Randomly generated graph on 10,000 vertices; unknown if correct LCDPs computed by algorithm
+
+---------------------------------------

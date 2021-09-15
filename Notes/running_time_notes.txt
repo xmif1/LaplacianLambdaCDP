@@ -1,0 +1,9 @@
+Current bottle neck is Eigen's BDCSVD implementation. Possible alternatives are
+the SVD implementation provided in the Armadillo library or even a commercial
+solution such as MATLAB. It seems that these library offer a faster implementation,
+even when using compiler optimisation for Eigen (see the CMake file).
+
+Another alternative would be to use a GPU based SVD solver; however it is known
+that for a benefit to be observed over CPU based SVD solvers, the dimension N
+must be significantly large. For commercial scale SAT instances however, this is
+the case.
